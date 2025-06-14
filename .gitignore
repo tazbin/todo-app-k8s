@@ -1,0 +1,12 @@
+# Node.js dependencies and logs
+backend/node_modules
+
+# dotenv environment files
+backend/.env
+
+# VSCode settings
+.vscode/
+
+# OS generated files
+.DS_Store
+Thumbs.db

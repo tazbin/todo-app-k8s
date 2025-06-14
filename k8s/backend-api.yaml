@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend-api-pod
+  template:
+    metadata:
+      labels:
+        app: backend-api-pod
+    spec:
+      containers:
+        - name: backend-api-container
+          image: mdtazbinur/todo-backend:v1
+          envFrom:
+            - configMapRef:
+                name: backend-api-config
+            - secretRef:
+                name: backend-api-secrets
+          ports:
+            - containerPort: 3000
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-api
+spec:
+  type: NodePort
+  ports:
+    - port: 3000
+      targetPort: 3000
+      nodePort: 30080
+  selector:
+    app: backend-api-pod

@@ -1,0 +1,20 @@
+{
+  "name": "todo-app-backend",
+  "version": "1.0.0",
+  "description": "A simple todo application with a PostgreSQL database",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "pg": "^8.7.1",
+    "sequelize": "^6.32.1",
+    "ioredis": "^5.3.2"
+  },
+  "devDependencies": {
+  },
+  "author": "Your Name",
+  "license": "ISC"
+}
