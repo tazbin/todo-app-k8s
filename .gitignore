@@ -10,3 +10,7 @@ backend/.env
 # OS generated files
 .DS_Store
 Thumbs.db
+
+# Ignore all secret manifests
+k8s/*secret*.yaml
+k8s/*secrets*.yaml
