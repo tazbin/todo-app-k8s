@@ -1,0 +1,51 @@
+- name: Uninstall K3s from Amazon Linux EC2
+  hosts: ec2
+  become: yes
+
+  tasks:
+    - name: Stop k3s service
+      systemd:
+        name: k3s
+        state: stopped
+        enabled: no
+      ignore_errors: yes
+
+    - name: Remove k3s binary
+      file:
+        path: /usr/local/bin/k3s
+        state: absent
+
+    - name: Remove kubectl binary
+      file:
+        path: /usr/local/bin/kubectl
+        state: absent
+
+    - name: Remove kubeconfig file from ec2-user
+      file:
+        path: /home/ec2-user/.kube
+        state: absent
+
+    - name: Remove k3s config directory
+      file:
+        path: /etc/rancher/k3s
+        state: absent
+
+    - name: Remove data directory used by k3s
+      file:
+        path: /var/lib/rancher/k3s
+        state: absent
+
+    - name: Remove k3s log files
+      file:
+        path: /var/log/k3s.log
+        state: absent
+
+    - name: Remove any leftover service files
+      file:
+        path: /etc/systemd/system/k3s.service
+        state: absent
+      ignore_errors: yes
+
+    - name: Reload systemd daemon
+      command: systemctl daemon-reload
+      ignore_errors: yes

@@ -14,3 +14,13 @@ Thumbs.db
 # Ignore all secret manifests
 k8s/*secret*.yaml
 k8s/*secrets*.yaml
+
+infra/terraform.tfstate
+# Ignore Terraform state files
+infra/terraform.tfstate.backup
+# Ignore Terraform plan files
+infra/terraform.tfplan
+# Ignore Terraform variables files
+infra/.terraform/
+
+ansible/hosts.ini

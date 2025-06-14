@@ -1,0 +1,65 @@
+- name: Setup K3s on Amazon Linux EC2
+  hosts: ec2
+  become: yes
+
+  tasks:
+    - name: Update all packages
+      yum:
+        name: "*"
+        state: latest
+
+    - name: Install K3s with kubeconfig readable
+      shell: curl -sfL https://get.k3s.io | sh -s - --write-kubeconfig-mode 644
+      args:
+        creates: /usr/local/bin/k3s
+
+    - name: Ensure K3s service is started and enabled
+      systemd:
+        name: k3s
+        state: started
+        enabled: yes
+
+    - name: Get latest stable kubectl version
+      shell: curl -L -s https://dl.k8s.io/release/stable.txt
+      register: kubectl_version
+      changed_when: false
+
+    - name: Download kubectl binary
+      get_url:
+        url: "https://dl.k8s.io/release/{{ kubectl_version.stdout }}/bin/linux/amd64/kubectl"
+        dest: /usr/local/bin/kubectl
+        mode: '0755'
+
+    - name: Verify kubectl installation
+      command: kubectl version --client
+
+    - name: Create .kube directory in home
+      file:
+        path: /home/ec2-user/.kube
+        state: directory
+        mode: '0755'
+        owner: ec2-user
+        group: ec2-user
+
+    - name: Copy kubeconfig file
+      command: cp /etc/rancher/k3s/k3s.yaml /home/ec2-user/.kube/config
+
+    - name: Set owner of kubeconfig
+      file:
+        path: /home/ec2-user/.kube/config
+        owner: ec2-user
+        group: ec2-user
+        mode: '0644'
+
+    - name: Verify kubectl can access cluster nodes
+      become: false
+      environment:
+        KUBECONFIG: /home/ec2-user/.kube/config
+      command: kubectl get nodes
+      register: kubectl_nodes
+      ignore_errors: yes
+
+    - name: Show kubectl get nodes output
+      debug:
+        var: kubectl_nodes.stdout
+
