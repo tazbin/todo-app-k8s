@@ -24,11 +24,18 @@
       register: kubectl_version
       changed_when: false
 
+    - name: Check if kubectl is already installed
+      stat:
+        path: /usr/local/bin/kubectl
+      register: kubectl_binary
+
     - name: Download kubectl binary
       get_url:
         url: "https://dl.k8s.io/release/{{ kubectl_version.stdout }}/bin/linux/amd64/kubectl"
         dest: /usr/local/bin/kubectl
         mode: '0755'
+      when: not kubectl_binary.stat.exists
+
 
     - name: Verify kubectl installation
       command: kubectl version --client
@@ -42,14 +49,20 @@
         group: ec2-user
 
     - name: Copy kubeconfig file
-      command: cp /etc/rancher/k3s/k3s.yaml /home/ec2-user/.kube/config
-
-    - name: Set owner of kubeconfig
-      file:
-        path: /home/ec2-user/.kube/config
+      copy:
+        src: /etc/rancher/k3s/k3s.yaml
+        dest: /home/ec2-user/.kube/config
+        remote_src: yes
         owner: ec2-user
         group: ec2-user
         mode: '0644'
+
+    - name: Permanently export KUBECONFIG in .bashrc
+      lineinfile:
+        path: /home/ec2-user/.bashrc
+        line: 'export KUBECONFIG=/home/ec2-user/.kube/config'
+        state: present
+      become_user: ec2-user
 
     - name: Verify kubectl can access cluster nodes
       become: false
@@ -62,4 +75,9 @@
     - name: Show kubectl get nodes output
       debug:
         var: kubectl_nodes.stdout
+
+    - name: Install htop
+      yum:
+        name: htop
+        state: present
 

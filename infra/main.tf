@@ -63,6 +63,13 @@ resource "aws_security_group" "terraform_sg" {
     cidr_blocks = ["0.0.0.0/0"] # Allow HTTP
   }
 
+    ingress {
+    from_port   = 3000
+    to_port     = 3000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # Allow HTTP
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -71,7 +78,7 @@ resource "aws_security_group" "terraform_sg" {
   }
 }
 
-# Update your EC2 instance to use the subnet
+# # Update your EC2 instance to use the subnet
 resource "aws_instance" "terraform_ec2" {
   ami                         = var.ami_id
   instance_type               = var.instance_type
@@ -81,7 +88,7 @@ resource "aws_instance" "terraform_ec2" {
   associate_public_ip_address = true
 
   root_block_device {
-    volume_size = 8
+    volume_size = 20
     volume_type = "gp3"
   }
 
