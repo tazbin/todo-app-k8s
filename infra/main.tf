@@ -1,98 +1,49 @@
-# Create a VPC
-resource "aws_vpc" "terraform_vpc" {
-  cidr_block = "10.0.0.0/16"
-  tags = {
-    Name = "terraform-vpc"
-  }
+provider "aws" {
+  region = var.aws_region
 }
 
-# Create an Internet Gateway
-resource "aws_internet_gateway" "terraform_gw" {
-  vpc_id = aws_vpc.terraform_vpc.id
-  tags = {
-    Name = "terraform-gw"
-  }
+module "vpc" {
+  source   = "./modules/vpc"
+  vpc_cidr = var.vpc_cidr
+  vpc_name = var.vpc_name
 }
 
-# Create a public subnet
-resource "aws_subnet" "terraform_subnet" {
-  vpc_id                  = aws_vpc.terraform_vpc.id
-  cidr_block              = "10.0.1.0/24"
-  map_public_ip_on_launch = true
-  availability_zone       = var.aws_az
-  tags = {
-    Name = "terraform-subnet"
-  }
+module "igw" {
+  source   = "./modules/internet_gateway"
+  vpc_id   = module.vpc.vpc_id
+  igw_name = var.igw_name
 }
 
-# Create a route table
-resource "aws_route_table" "terraform_rt" {
-  vpc_id = aws_vpc.terraform_vpc.id
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.terraform_gw.id
-  }
-  tags = {
-    Name = "terraform-rt"
-  }
+module "subnet" {
+  source            = "./modules/subnet"
+  vpc_id            = module.vpc.vpc_id
+  subnet_cidr       = var.subnet_cidr
+  availability_zone = var.aws_az
+  subnet_name       = var.subnet_name
 }
 
-# Associate the route table with the subnet
-resource "aws_route_table_association" "terraform_route_table_association" {
-  subnet_id      = aws_subnet.terraform_subnet.id
-  route_table_id = aws_route_table.terraform_rt.id
+module "route_table" {
+  source              = "./modules/route_table"
+  vpc_id              = module.vpc.vpc_id
+  igw_id              = module.igw.igw_id
+  subnet_id           = module.subnet.subnet_id
+  route_table_name    = var.route_table_name
 }
 
-# Create a security group to allow SSH and HTTP access
-resource "aws_security_group" "terraform_sg" {
-  name        = "allow_ssh_http"
-  description = "Allow SSH and HTTP"
-  vpc_id      = aws_vpc.terraform_vpc.id
-
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # Allow SSH from anywhere
-  }
-
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # Allow HTTP
-  }
-
-    ingress {
-    from_port   = 3000
-    to_port     = 3000
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # Allow HTTP
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"] # Allow all outbound
-  }
+module "security_group" {
+  source                     = "./modules/security_group"
+  vpc_id                     = module.vpc.vpc_id
+  security_group_name        = var.security_group_name
+  security_group_description = var.security_group_description
 }
 
-# # Update your EC2 instance to use the subnet
-resource "aws_instance" "terraform_ec2" {
-  ami                         = var.ami_id
-  instance_type               = var.instance_type
-  key_name                    = "tazbinur-server-keypair"
-  subnet_id                   = aws_subnet.terraform_subnet.id
-  vpc_security_group_ids      = [aws_security_group.terraform_sg.id]
-  associate_public_ip_address = true
-
-  root_block_device {
-    volume_size = 20
-    volume_type = "gp3"
-  }
-
-  tags = {
-    Name = "terraform-ec2"
-  }
+module "ec2" {
+  source            = "./modules/ec2"
+  ami_id            = var.ec2_ami_id
+  instance_type     = var.ec2_instance_type
+  subnet_id         = module.subnet.subnet_id
+  security_group_id = module.security_group.security_group_id
+  key_name          = var.ec2_key_name
+  volume_size       = var.ec2_volume_size
+  instance_name     = var.ec2_instance_name
 }

@@ -3,15 +3,29 @@
   become: yes
 
   tasks:
-    - name: Update all packages
+    - name: Update all system packages
       yum:
         name: "*"
         state: latest
 
+    - name: Install required tools (htop, bash-completion, jq, git, wget)
+      yum:
+        name:
+          - htop
+          - bash-completion
+          - jq
+          - git
+          - wget
+        state: present
+
+    - name: Check if K3s is already installed
+      stat:
+        path: /usr/local/bin/k3s
+      register: k3s_binary
+
     - name: Install K3s with kubeconfig readable
       shell: curl -sfL https://get.k3s.io | sh -s - --write-kubeconfig-mode 644
-      args:
-        creates: /usr/local/bin/k3s
+      when: not k3s_binary.stat.exists
 
     - name: Ensure K3s service is started and enabled
       systemd:
@@ -36,11 +50,10 @@
         mode: '0755'
       when: not kubectl_binary.stat.exists
 
-
     - name: Verify kubectl installation
       command: kubectl version --client
 
-    - name: Create .kube directory in home
+    - name: Create .kube directory for ec2-user
       file:
         path: /home/ec2-user/.kube
         state: directory
@@ -48,7 +61,7 @@
         owner: ec2-user
         group: ec2-user
 
-    - name: Copy kubeconfig file
+    - name: Copy kubeconfig to ec2-user
       copy:
         src: /etc/rancher/k3s/k3s.yaml
         dest: /home/ec2-user/.kube/config
@@ -57,12 +70,49 @@
         group: ec2-user
         mode: '0644'
 
-    - name: Permanently export KUBECONFIG in .bashrc
+    - name: Set KUBECONFIG for ec2-user in .bashrc
       lineinfile:
         path: /home/ec2-user/.bashrc
         line: 'export KUBECONFIG=/home/ec2-user/.kube/config'
         state: present
       become_user: ec2-user
+
+    - name: Enable kubectl bash completion for ec2-user
+      lineinfile:
+        path: /home/ec2-user/.bashrc
+        line: 'source <(kubectl completion bash)'
+        state: present
+      become_user: ec2-user
+
+    - name: Export KUBECONFIG system-wide for all users
+      copy:
+        dest: /etc/profile.d/kubectl.sh
+        content: 'export KUBECONFIG=/home/ec2-user/.kube/config'
+        mode: '0644'
+
+    - name: Ensure /usr/local/bin is in system PATH
+      lineinfile:
+        path: /etc/profile
+        line: 'export PATH=$PATH:/usr/local/bin'
+        state: present
+
+    - name: Wait for kubeconfig to be created
+      wait_for:
+        path: /etc/rancher/k3s/k3s.yaml
+        timeout: 60
+
+    - name: Create .kube directory for root
+      file:
+        path: /root/.kube
+        state: directory
+        mode: '0700'
+
+    - name: Symlink kubeconfig to root user
+      file:
+        src: /etc/rancher/k3s/k3s.yaml
+        dest: /root/.kube/config
+        state: link
+        force: yes
 
     - name: Verify kubectl can access cluster nodes
       become: false
@@ -75,9 +125,3 @@
     - name: Show kubectl get nodes output
       debug:
         var: kubectl_nodes.stdout
-
-    - name: Install htop
-      yum:
-        name: htop
-        state: present
-

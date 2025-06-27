@@ -22,5 +22,6 @@ infra/terraform.tfstate.backup
 infra/terraform.tfplan
 # Ignore Terraform variables files
 infra/.terraform/
+infra/.terraform.lock.hcl
 
 ansible/hosts.ini
