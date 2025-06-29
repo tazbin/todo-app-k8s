@@ -2,8 +2,11 @@
   <div class="app">
     <h1>📝 Todo App</h1>
 
-    <div class="cache-info" v-if="todosData.cache">
-      Cache: <span :class="`cache-${todosData.cache}`">{{ todosData.cache }}</span>
+    <div class="header-actions">
+      <p v-if="todosData.cache">
+        Cache: <span :class="`cache-${todosData.cache}`">{{ todosData.cache }}</span>
+      </p>
+      <button class="refresh-btn" @click="fetchTodos">🔄 Refresh</button>
     </div>
 
     <form @submit.prevent="addTodo" class="todo-form">
@@ -27,12 +30,24 @@
             </span>
           </p>
         </div>
-        <button @click="deleteTodo(todo.id)">🗑</button>
+        <button @click="confirmDelete(todo)">🗑</button>
       </li>
     </ul>
 
     <p v-if="loading" class="info-msg">Loading todos...</p>
     <p v-if="error" class="error-msg">{{ error }}</p>
+
+    <!-- Custom Delete Confirmation Modal -->
+    <div v-if="showConfirmModal" class="modal-overlay">
+      <div class="modal-box">
+        <h2>⚠️ Confirm Delete</h2>
+        <p>Are you sure you want to delete <strong>{{ selectedTodo?.title }}</strong>?</p>
+        <div class="modal-actions">
+          <button @click="deleteTodo" class="btn-danger">Yes, Delete</button>
+          <button @click="cancelDelete" class="btn-secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -43,7 +58,9 @@ export default {
       todosData: { todos: [] },
       newTodo: '',
       loading: false,
-      error: null
+      error: null,
+      showConfirmModal: false,
+      selectedTodo: null
     };
   },
   mounted() {
@@ -86,16 +103,27 @@ export default {
         console.error(err);
       }
     },
-    async deleteTodo(id) {
+    confirmDelete(todo) {
+      this.selectedTodo = todo;
+      this.showConfirmModal = true;
+    },
+    async deleteTodo() {
       try {
-        await fetch(`${import.meta.env.VITE_API_BASE_URL}:${import.meta.env.VITE_API_PORT}/todos/${id}`, {
+        await fetch(`${import.meta.env.VITE_API_BASE_URL}:${import.meta.env.VITE_API_PORT}/todos/${this.selectedTodo.id}`, {
           method: 'DELETE'
         });
-        this.todosData.todos = this.todosData.todos.filter(todo => todo.id !== id);
+        this.todosData.todos = this.todosData.todos.filter(todo => todo.id !== this.selectedTodo.id);
       } catch (err) {
         this.error = 'Failed to delete todo';
         console.error(err);
+      } finally {
+        this.showConfirmModal = false;
+        this.selectedTodo = null;
       }
+    },
+    cancelDelete() {
+      this.showConfirmModal = false;
+      this.selectedTodo = null;
     }
   }
 };
@@ -135,9 +163,11 @@ h1 {
   margin-bottom: 10px;
 }
 
-.cache-info {
-  text-align: center;
-  margin-bottom: 16px;
+.header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
   font-size: 14px;
   color: var(--text-light);
 }
@@ -150,6 +180,21 @@ h1 {
 .cache-miss {
   color: var(--danger);
   font-weight: bold;
+}
+
+.refresh-btn {
+  background-color: transparent;
+  border: 1px solid var(--primary);
+  padding: 5px 10px;
+  border-radius: 6px;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.refresh-btn:hover {
+  background-color: var(--primary);
+  color: white;
 }
 
 .todo-form {
@@ -249,5 +294,67 @@ h1 {
 .info-msg {
   text-align: center;
   color: var(--text-light);
+}
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0,0,0,0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+.modal-box {
+  background-color: white;
+  padding: 24px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+}
+
+.modal-box h2 {
+  margin-bottom: 10px;
+  color: var(--danger);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.btn-danger {
+  background-color: var(--danger);
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-danger:hover {
+  background-color: #c53030;
+}
+
+.btn-secondary {
+  background-color: #e5e7eb;
+  color: #374151;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background-color: #d1d5db;
 }
 </style>
