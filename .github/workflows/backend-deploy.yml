@@ -46,6 +46,11 @@ jobs:
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
           cd ~/k8s
-          kubectl apply -f .
+          if ! kubectl get deployment backend-api -n default > /dev/null 2>&1; then
+            echo "backend-api deployment not found, applying manifests..."
+            kubectl apply -f backend-api.yaml
+          else
+            echo "backend-api deployment already exists"
+          fi
           kubectl set image deployment/backend-api backend-api-container=${{ secrets.DOCKERHUB_USERNAME }}/todo-backend:${{ env.TAG }} -n default
           kubectl rollout status deployment/backend-api -n default

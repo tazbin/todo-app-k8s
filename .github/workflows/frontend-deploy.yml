@@ -49,6 +49,11 @@ jobs:
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
           cd ~/k8s
-          kubectl apply -f .
+          if ! kubectl get deployment frontend-app -n default > /dev/null 2>&1; then
+            echo "frontend-app deployment not found, applying manifests..."
+            kubectl apply -f frontend-app.yaml
+          else
+            echo "frontend-app deployment already exists"
+          fi
           kubectl set image deployment/frontend-app frontend-app-container=${{ secrets.DOCKERHUB_USERNAME }}/todo-frontend:${{ env.TAG }} -n default
           kubectl rollout status deployment/frontend-app -n default
