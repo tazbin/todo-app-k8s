@@ -20,6 +20,7 @@ jobs:
 
     - name: Check & prepare k8s directory on EC2
       uses: appleboy/ssh-action@v1.0.0
+      continue-on-error: true
       with:
         host: ${{ secrets.EC2_HOST }}
         username: ${{ secrets.EC2_USER }}
