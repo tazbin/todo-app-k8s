@@ -1,8 +1,6 @@
 <template>
   <div class="app">
     <h1>📝 Todo App</h1>
-    <hr>
-    Lorem ipsum dolor sit amet consectetur adipisicing elit. Atque eius cupiditate quibusdam, sit nobis delectus natus id, earum commodi illo sunt, fugit optio beatae. Dolor officia odio doloremque magnam incidunt?
 
     <div class="header-actions">
       <p v-if="todosData.cache">
