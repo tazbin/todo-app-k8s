@@ -1,6 +1,10 @@
 <template>
   <div class="app">
-    <h1>Todo App</h1>
+    <h1>📝 Todo App</h1>
+
+    <div class="cache-info" v-if="todosData.cache">
+      Cache: <span :class="`cache-${todosData.cache}`">{{ todosData.cache }}</span>
+    </div>
 
     <form @submit.prevent="addTodo" class="todo-form">
       <input
@@ -12,17 +16,23 @@
       <button type="submit">Add</button>
     </form>
 
-    <pre>{{ todos }}</pre>
-
     <ul class="todo-list">
       <li v-for="todo in todosData.todos" :key="todo.id" class="todo-item">
-        <span>{{ todo.title }}</span>
-        <button @click="deleteTodo(todo.id)">❌</button>
+        <div class="todo-details">
+          <h3>{{ todo.title }}</h3>
+          <p class="meta">
+            Created: {{ formatDate(todo.createdAt) }} ·
+            <span :class="['status', todo.completed ? 'completed' : 'pending']">
+              {{ todo.completed ? 'Completed' : 'Pending' }}
+            </span>
+          </p>
+        </div>
+        <button @click="deleteTodo(todo.id)">🗑</button>
       </li>
     </ul>
 
-    <p v-if="loading">Loading todos...</p>
-    <p v-if="error" class="error">{{ error }}</p>
+    <p v-if="loading" class="info-msg">Loading todos...</p>
+    <p v-if="error" class="error-msg">{{ error }}</p>
   </div>
 </template>
 
@@ -30,7 +40,7 @@
 export default {
   data() {
     return {
-      todosData: {},
+      todosData: { todos: [] },
       newTodo: '',
       loading: false,
       error: null
@@ -40,6 +50,10 @@ export default {
     this.fetchTodos();
   },
   methods: {
+    formatDate(dateStr) {
+      const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+      return new Date(dateStr).toLocaleString(undefined, options);
+    },
     async fetchTodos() {
       this.loading = true;
       this.error = null;
@@ -88,45 +102,82 @@ export default {
 </script>
 
 <style>
+:root {
+  --bg-light: #f4f7f8;
+  --bg-white: #ffffff;
+  --border-color: #dcdcdc;
+  --primary: #6366f1;
+  --danger: #ef4444;
+  --success: #10b981;
+  --text-dark: #1f2937;
+  --text-light: #6b7280;
+}
+
+body {
+  background: var(--bg-light);
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', sans-serif;
+}
+
 .app {
-  max-width: 500px;
+  max-width: 600px;
   margin: 40px auto;
-  padding: 20px;
-  border: 2px solid #ccc;
-  border-radius: 8px;
-  font-family: sans-serif;
-  background-color: #f9f9f9;
+  padding: 24px;
+  border-radius: 12px;
+  background-color: var(--bg-white);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 h1 {
   text-align: center;
-  color: #333;
+  color: var(--primary);
+  margin-bottom: 10px;
+}
+
+.cache-info {
+  text-align: center;
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: var(--text-light);
+}
+
+.cache-hit {
+  color: var(--success);
+  font-weight: bold;
+}
+
+.cache-miss {
+  color: var(--danger);
+  font-weight: bold;
 }
 
 .todo-form {
   display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: 12px;
+  margin-bottom: 24px;
 }
 
 .todo-form input {
   flex: 1;
-  padding: 8px;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
   font-size: 16px;
 }
 
 .todo-form button {
-  padding: 8px 16px;
-  font-size: 16px;
-  background-color: #4caf50;
+  padding: 10px 18px;
+  background-color: var(--primary);
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
+  font-size: 16px;
   cursor: pointer;
 }
 
 .todo-form button:hover {
-  background-color: #45a049;
+  background-color: #4f46e5;
 }
 
 .todo-list {
@@ -137,28 +188,66 @@ h1 {
 .todo-item {
   display: flex;
   justify-content: space-between;
-  padding: 8px;
-  background: white;
-  margin-bottom: 10px;
-  border: 1px solid #ddd;
+  align-items: center;
+  background: var(--bg-white);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 14px;
+  transition: box-shadow 0.2s;
+}
+
+.todo-item:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.todo-details h3 {
+  margin: 0 0 4px 0;
+  font-size: 17px;
+  color: var(--text-dark);
+}
+
+.meta {
+  font-size: 13px;
+  color: var(--text-light);
+}
+
+.status {
+  padding: 2px 6px;
   border-radius: 4px;
+  font-weight: 500;
+}
+
+.completed {
+  background-color: #e7f9ef;
+  color: var(--success);
+}
+
+.pending {
+  background-color: #fef2f2;
+  color: var(--danger);
 }
 
 .todo-item button {
-  background-color: #f44336;
+  background-color: transparent;
   border: none;
-  color: white;
-  padding: 4px 10px;
+  font-size: 18px;
+  color: var(--danger);
   cursor: pointer;
-  border-radius: 4px;
 }
 
 .todo-item button:hover {
-  background-color: #d32f2f;
+  color: #b91c1c;
 }
 
-.error {
-  color: red;
+.error-msg {
+  color: var(--danger);
   text-align: center;
+  font-weight: bold;
+}
+
+.info-msg {
+  text-align: center;
+  color: var(--text-light);
 }
 </style>
