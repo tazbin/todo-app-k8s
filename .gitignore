@@ -5,6 +5,7 @@ frontend/node_modules
 # dotenv environment files
 backend/.env
 frontend/.env
+frontend/.env.production
 
 # VSCode settings
 .vscode/

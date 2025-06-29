@@ -3,7 +3,7 @@
 KEY_PATH=/Users/tazbinur/learning/devOps/aws-key/tazbinur-server-keypair.pem
 LOCAL_DIR=/Users/tazbinur/learning/devOps/k8s/todo-app/k8s
 EC2_USER=ec2-user
-EC2_IP=52.90.120.111
+EC2_IP=54.158.233.131
 REMOTE_DIR=/home/ec2-user/k8s
 
 # === Copy Folder ===

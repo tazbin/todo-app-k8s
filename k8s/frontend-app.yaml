@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: frontend-app-container
-          image: mdtazbinur/todo-frontend:v1
+          image: mdtazbinur/todo-frontend:v5
           ports:
             - containerPort: 80
           resources:
