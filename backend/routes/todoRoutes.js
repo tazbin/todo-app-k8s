@@ -13,7 +13,7 @@ router.get('/health', async (req, res) => {
     let isApiHealthy = true;
     let isDbHealthy = true;
     let isRedisHealthy = true;
-    let message = 'All systems operational & good';
+    let message = 'All systems operational...';
 
     // Check DB
     try {
