@@ -1,10 +1,10 @@
-name: Backend CI/CD with SHA Tag
+name: Frontend CI/CD with SHA Tag
 
 on:
   push:
     branches: [master]
-    paths:
-      - 'backend/**'
+    # paths:
+    #   - 'frontend/**'
 
 jobs:
   build-and-deploy:
@@ -33,10 +33,13 @@ jobs:
     - name: Log in to Docker Hub
       run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
-    - name: Build and Push Docker image
+    - name: Build and Push Frontend Docker image
       run: |
-        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/todo-backend:${{ env.TAG }} ./backend
-        docker push ${{ secrets.DOCKERHUB_USERNAME }}/todo-backend:${{ env.TAG }}
+        docker build \
+          --build-arg API_BASE_URL=${{ secrets.EC2_HOST }} \
+          --build-arg API_PORT=${{ secrets.BACKEND_API_PORT }} \
+          -t ${{ secrets.DOCKERHUB_USERNAME }}/todo-frontend:${{ env.TAG }} ./frontend
+        docker push ${{ secrets.DOCKERHUB_USERNAME }}/todo-frontend:${{ env.TAG }}
 
     - name: SSH into EC2 and apply manifests
       uses: appleboy/ssh-action@v1.0.0
@@ -47,5 +50,5 @@ jobs:
         script: |
           cd ~/k8s
           kubectl apply -f .
-          kubectl set image deployment/backend-api backend-api-container=${{ secrets.DOCKERHUB_USERNAME }}/todo-backend:${{ env.TAG }} -n default
-          kubectl rollout status deployment/backend-api -n default
+          kubectl set image deployment/frontend-app frontend-app-container=${{ secrets.DOCKERHUB_USERNAME }}/todo-frontend:${{ env.TAG }} -n default
+          kubectl rollout status deployment/frontend-app -n default
