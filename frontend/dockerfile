@@ -18,7 +18,7 @@ COPY .env.production.template .env.production
 # Replace placeholders with actual values from build args
 ARG API_BASE_URL
 ARG API_PORT
-RUN sed -i "s|{{API_BASE_URL}}|$API_BASE_URL|g" .env.production && \
+RUN sed -i "s|{{API_BASE_URL}}|http://$API_BASE_URL|g" .env.production && \
     sed -i "s|{{API_PORT}}|$API_PORT|g" .env.production
 
 # Build the app
