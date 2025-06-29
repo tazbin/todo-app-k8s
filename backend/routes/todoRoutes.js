@@ -6,6 +6,8 @@ const redis = require('../redis/client');
 
 const TODO_LIST_CACHE_KEY = 'todos:all';
 
+sequelize.sync();
+
 // Health check endpoint
 router.get('/health', async (req, res) => {
     let isApiHealthy = true;

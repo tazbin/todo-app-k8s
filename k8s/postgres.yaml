@@ -1,19 +1,24 @@
+# Headless Service for StatefulSet
 apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: postgres-pvc
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
----
-apiVersion: apps/v1
-kind: Deployment
+kind: Service
 metadata:
   name: postgres
 spec:
+  clusterIP: None
+  selector:
+    app: postgres-pod
+  ports:
+    - port: 5432
+      targetPort: 5432
+
+---
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+spec:
+  serviceName: "postgres"
   replicas: 1
   selector:
     matchLabels:
@@ -24,36 +29,30 @@ spec:
         app: postgres-pod
     spec:
       containers:
-        - name: postgres-container
-          image: postgres:14
-          envFrom:
-            - configMapRef:
-                name: backend-api-config
-            - secretRef:
-                name: backend-api-secrets
-          ports:
-            - containerPort: 5432
-          volumeMounts:
-            - mountPath: /var/lib/postgresql/data
-              name: postgres-storage
-          resources:
-            requests:
-              memory: "256Mi"
-              cpu: "250m"
-            limits:
-              memory: "512Mi"
-              cpu: "500m"
-      volumes:
-        - name: postgres-storage
-          persistentVolumeClaim:
-            claimName: postgres-pvc
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: postgres
-spec:
-  ports:
-    - port: 5432
-  selector:
-    app: postgres-pod
+      - name: postgres-container
+        image: postgres:14
+        envFrom:
+          - configMapRef:
+              name: app-config
+          - secretRef:
+              name: backend-api-secrets
+        ports:
+          - containerPort: 5432
+        volumeMounts:
+          - name: postgres-storage
+            mountPath: /var/lib/postgresql/data
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-storage
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 500Mi

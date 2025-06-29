@@ -14,21 +14,21 @@ spec:
     spec:
       containers:
         - name: backend-api-container
-          image: mdtazbinur/todo-backend:v1
+          image: mdtazbinur/todo-backend:v4
           envFrom:
             - configMapRef:
-                name: backend-api-config
+                name: app-config
             - secretRef:
                 name: backend-api-secrets
           ports:
             - containerPort: 3000
           resources:
             requests:
-              memory: "128Mi"
-              cpu: "100m"
-            limits:
               memory: "256Mi"
               cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
 ---
 apiVersion: v1
 kind: Service

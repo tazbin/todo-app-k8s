@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend-app-pod
+  template:
+    metadata:
+      labels:
+        app: frontend-app-pod
+    spec:
+      containers:
+        - name: frontend-app-container
+          image: mdtazbinur/todo-frontend:v1
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-app
+spec:
+  type: NodePort
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30090
+  selector:
+    app: frontend-app-pod
+
+

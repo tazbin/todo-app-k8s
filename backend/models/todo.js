@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../db/connection');
 
-const Todo = sequelize.define('Todo', {
+const Todo = sequelize.define('todo', {
   title: {
     type: DataTypes.STRING,
     allowNull: false
@@ -11,7 +11,7 @@ const Todo = sequelize.define('Todo', {
     defaultValue: false
   }
 }, {
-  tableName: 'Todos'
+  tableName: 'todos'
 });
 
 module.exports = Todo;
