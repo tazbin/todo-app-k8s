@@ -1,34 +1,40 @@
-name: Deploy backend to EC2 K3s
+name: Backend CI/CD with SHA Tag
 
 on:
   push:
-    branches:
-      - master
-    # paths:
-    #   - 'backend/**'
+    branches: [main]
+    paths:
+      - 'backend/**'
 
 jobs:
-  deploy:
-    name: Apply backend K8s manifests to EC2
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Set up SSH key
-      run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+    - name: Set commit SHA as image tag
+      id: vars
+      run: echo "TAG=${GITHUB_SHA::7}" >> $GITHUB_ENV
 
-    - name: Copy backend manifests to EC2
-      run: |
-        scp -r ./k8s ec2-user@${{ secrets.EC2_HOST }}:/home/ec2-user/k8s-manifests
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
 
-    - name: Apply backend K8s manifests on EC2
+    - name: Log in to Docker Hub
+      run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+    - name: Build and Push Docker image
       run: |
-        ssh ec2-user@${{ secrets.EC2_HOST }} << 'EOF'
-          kubectl apply -f /home/ec2-user/k8s-manifests/
-        EOF
+        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/todo-backend:${{ env.TAG }} ./backend
+        docker push ${{ secrets.DOCKERHUB_USERNAME }}/todo-backend:${{ env.TAG }}
+
+    - name: SSH and Deploy to K3s
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USER }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        script: |
+          kubectl set image deployment/backend-api backend-api-container=${{ secrets.DOCKERHUB_USERNAME }}/todo-backend:${{ env.TAG }} -n default
+          kubectl rollout status deployment/backend-api -n default
