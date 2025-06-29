@@ -2,11 +2,14 @@
 
 const express = require('express');
 const bodyParser = require('body-parser');
+const cors = require('cors');
 const { connectDB } = require('./db/connection');
 const todoRoutes = require('./routes/todoRoutes');
 
 const app = express();
 const PORT = process.env.APPLICATION_PORT || 3000;
+
+app.use(cors());
 
 // Middleware
 app.use(bodyParser.json());

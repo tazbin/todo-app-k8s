@@ -1,8 +1,10 @@
 # Node.js dependencies and logs
 backend/node_modules
+frontend/node_modules
 
 # dotenv environment files
 backend/.env
+frontend/.env
 
 # VSCode settings
 .vscode/

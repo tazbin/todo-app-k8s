@@ -21,23 +21,23 @@ services:
     ports:
       - "6379:6379"
 
-  backend:
-    build: ./backend
-    container_name: todo-app-backend-container
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: todo_user
-      POSTGRES_PASSWORD: todo_password
-      POSTGRES_DB: todo_database
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
-      APPLICATION_PORT: 3000
-      APP_ENVIRONMENT: docker
-    ports:
-      - "3000:3000"
-    depends_on:
-      - postgres
-      - redis
+  # backend:
+  #   build: ./backend
+  #   container_name: todo-app-backend-container
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_USER: todo_user
+  #     POSTGRES_PASSWORD: todo_password
+  #     POSTGRES_DB: todo_database
+  #     POSTGRES_HOST: postgres
+  #     POSTGRES_PORT: 5432
+  #     APPLICATION_PORT: 3000
+  #     APP_ENVIRONMENT: docker
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     - postgres
+  #     - redis
 
 volumes:
   postgres_data:
