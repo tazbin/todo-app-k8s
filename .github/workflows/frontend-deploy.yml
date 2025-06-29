@@ -3,8 +3,8 @@ name: Frontend CI/CD with SHA Tag
 on:
   push:
     branches: [master]
-    # paths:
-    #   - 'frontend/**'
+    paths:
+      - 'frontend/**'
 
 jobs:
   build-and-deploy:
