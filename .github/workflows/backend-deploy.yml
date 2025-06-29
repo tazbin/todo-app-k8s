@@ -3,8 +3,8 @@ name: Backend CI/CD with SHA Tag
 on:
   push:
     branches: [master]
-    paths:
-      - 'backend/**'
+    # paths:
+    #   - 'backend/**'
 
 jobs:
   build-and-deploy:
